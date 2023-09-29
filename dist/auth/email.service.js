@@ -18,19 +18,19 @@ let EmailService = class EmailService {
     constructor(jwt, config) {
         this.jwt = jwt;
         this.config = config;
+        this.transporter = nodemailer.createTransport({
+            host: 'smtp.mail.yahoo.com',
+            port: 587,
+            secure: false,
+            auth: {
+                user: 'profmike2005@yahoo.com',
+                pass: 'Anayochi@total30',
+            },
+            tls: { ciphers: 'SSLv3' },
+        });
     }
     async sendConfirmationEmail(email, userId) {
         try {
-            const transporter = nodemailer.createTransport({
-                host: 'smtp.mail.yahoo.com',
-                port: 587,
-                secure: false,
-                auth: {
-                    user: 'profmike2005@yahoo.com',
-                    pass: 'Anayochi@total30',
-                },
-                tls: { ciphers: 'SSLv3', },
-            });
             const confirmationToken = this.signupConfirmation(userId, email);
             const mailOptions = {
                 from: 'Registration Service',
@@ -42,7 +42,7 @@ let EmailService = class EmailService {
         <a href="https://example.com/confirm?token=${confirmationToken}">Confirm Email</a>
       `,
             };
-            await transporter.sendMail(mailOptions);
+            await this.transporter.sendMail(mailOptions);
             console.log('Confirmation email sent successfully.');
         }
         catch (error) {
@@ -65,7 +65,6 @@ let EmailService = class EmailService {
 exports.EmailService = EmailService;
 exports.EmailService = EmailService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [jwt_1.JwtService,
-        config_1.ConfigService])
+    __metadata("design:paramtypes", [jwt_1.JwtService, config_1.ConfigService])
 ], EmailService);
 //# sourceMappingURL=email.service.js.map
