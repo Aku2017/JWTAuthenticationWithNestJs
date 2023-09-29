@@ -7,14 +7,15 @@ import { AuthDto } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import { EmailService } from './email.service';
 
 
 @Injectable()
 export class AuthService {
     constructor(private prisma: PrismaService,
         private jwt: JwtService,
-        private config: ConfigService,
+      private config: ConfigService,
+      private emailService: EmailService
      
 /*@Inject(ConfigService) private configService: ConfigService,*/) { }
  
@@ -33,7 +34,7 @@ export class AuthService {
                 },
             });
    
-        await this.sendConfirmationEmail(user.email,user.id);
+        await this.emailService.sendConfirmationEmail(user.email,user.id);
 
     // Return a response indicating that the user needs to check their email for confirmation
         return  this.signToken(user.id, user.email);
@@ -52,45 +53,6 @@ export class AuthService {
         }
     }
 
-   async sendConfirmationEmail(email: string, userId: number) {
-        try {
-            // Create a nodemailer transporter
-            const transporter = nodemailer.createTransport({
-                // Replace with your email service configuration (e.g., SMTP or a third-party service)
-                host: 'smtp.gmail.com',
-                port: 465,
-                secure:true,
-                auth: {
-                    user: 'akuanayochi2015@gmail.com', // Your email address
-                    pass: 'Anayochi@total30',    // Your email password or API key
-                },
-            });
-            
-            const confirmationToken = this.signupConfirmation(userId, email);
-            // Define the email content
-            const mailOptions = {
-                from: 'akuanayochi2015@gmail.com',
-                to: email, // User's email address
-                subject: 'Email Confirmation', // Email subject
-                html: `
-        <p>Thank you for signing up!</p>
-        <p>Please click the following link to confirm your email:</p>
-        <a href="https://example.com/confirm?token=${confirmationToken}">Confirm Email</a>
-      `,
-            };
-
-            // Send the email
-            await transporter.sendMail(mailOptions);
-
-            console.log('Confirmation email sent successfully.');
-            
-
-        }
-        catch (error)
-        {
-            console.error('Error sending confirmation email:', error)
-        }
-    }
 
     async signin(dto: AuthDto)
     {

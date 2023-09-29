@@ -16,12 +16,13 @@ const argon = require("argon2");
 const library_1 = require("@prisma/client/runtime/library");
 const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
-const nodemailer = require("nodemailer");
+const email_service_1 = require("./email.service");
 let AuthService = class AuthService {
-    constructor(prisma, jwt, config) {
+    constructor(prisma, jwt, config, emailService) {
         this.prisma = prisma;
         this.jwt = jwt;
         this.config = config;
+        this.emailService = emailService;
     }
     async signup(dto) {
         const hash = await argon.hash(dto.password);
@@ -34,6 +35,7 @@ let AuthService = class AuthService {
                     lastName: dto.lastName
                 },
             });
+            await this.emailService.sendConfirmationEmail(user.email, user.id);
             return this.signToken(user.id, user.email);
         }
         catch (error) {
@@ -43,35 +45,6 @@ let AuthService = class AuthService {
                 }
             }
             throw error;
-        }
-    }
-    async sendConfirmationEmail(email, userId) {
-        try {
-            const transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 465,
-                secure: true,
-                auth: {
-                    user: 'akuanayochi2015@gmail.com',
-                    pass: 'Anayochi@total30',
-                },
-            });
-            const confirmationToken = this.signupConfirmation(userId, email);
-            const mailOptions = {
-                from: 'akuanayochi2015@gmail.com',
-                to: email,
-                subject: 'Email Confirmation',
-                html: `
-        <p>Thank you for signing up!</p>
-        <p>Please click the following link to confirm your email:</p>
-        <a href="https://example.com/confirm?token=${confirmationToken}">Confirm Email</a>
-      `,
-            };
-            await transporter.sendMail(mailOptions);
-            console.log('Confirmation email sent successfully.');
-        }
-        catch (error) {
-            console.error('Error sending confirmation email:', error);
         }
     }
     async signin(dto) {
@@ -109,7 +82,6 @@ let AuthService = class AuthService {
             expiresIn: '15m',
             secret: secret,
         });
-        console.log(token);
         return {
             access_token: token,
         };
@@ -120,6 +92,7 @@ exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         jwt_1.JwtService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        email_service_1.EmailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map
